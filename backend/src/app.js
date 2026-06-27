@@ -15,16 +15,22 @@ import dashboardRoutes from './routes/dashboard.routes.js';
 const app = express();
 
 // CLIENT_URL may hold several comma-separated origins (e.g. the Vercel URL and
-// the custom domain). Allow any of them, plus same-origin / non-browser calls.
+// a custom domain). Allow any of them, plus any of this app's own
+// memokeep*.vercel.app subdomains (so renaming the Vercel domain just works),
+// plus same-origin / non-browser calls.
 const allowedOrigins = env.clientUrl
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean);
 
+const memokeepVercel = /^https:\/\/[a-z0-9-]*memokeep[a-z0-9-]*\.vercel\.app$/;
+
 app.use(
   cors({
     origin(origin, cb) {
-      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+      if (!origin || allowedOrigins.includes(origin) || memokeepVercel.test(origin)) {
+        return cb(null, true);
+      }
       return cb(new Error(`Origin ${origin} not allowed by CORS`));
     },
     credentials: true,
