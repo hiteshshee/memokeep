@@ -1,0 +1,13 @@
+import app from './app.js';
+import env from './config/env.js';
+import { connectDB } from './config/db.js';
+
+async function start() {
+  await connectDB();
+  app.listen(env.port, () => {
+    console.log(`🚀 MemoKeep API running on http://localhost:${env.port} (${env.nodeEnv})`);
+    console.log(`   Cloudinary storage: ${env.cloudinary.enabled ? 'enabled' : 'local disk fallback'}`);
+  });
+}
+
+start();
