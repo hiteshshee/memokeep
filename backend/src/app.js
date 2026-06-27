@@ -14,9 +14,19 @@ import dashboardRoutes from './routes/dashboard.routes.js';
 
 const app = express();
 
+// CLIENT_URL may hold several comma-separated origins (e.g. the Vercel URL and
+// the custom domain). Allow any of them, plus same-origin / non-browser calls.
+const allowedOrigins = env.clientUrl
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+
 app.use(
   cors({
-    origin: env.clientUrl,
+    origin(origin, cb) {
+      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+      return cb(new Error(`Origin ${origin} not allowed by CORS`));
+    },
     credentials: true,
   })
 );
