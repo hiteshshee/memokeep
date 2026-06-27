@@ -1,11 +1,14 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import {
+  Package, ReceiptText, ShieldCheck, BookOpen, Receipt, Image as ImageIcon, Paperclip, Upload,
+} from 'lucide-react';
 import api from '../api/client.js';
 import Spinner from '../components/Spinner.jsx';
 import { currency, formatDate, daysUntil, DOC_TYPES } from '../utils/format.js';
 
 const TYPE_ICON = {
-  invoice: '🧾', warranty: '🛡️', manual: '📘', receipt: '🧾', image: '🖼️', other: '📎',
+  invoice: ReceiptText, warranty: ShieldCheck, manual: BookOpen, receipt: Receipt, image: ImageIcon, other: Paperclip,
 };
 
 export default function ProductDetail() {
@@ -72,29 +75,23 @@ export default function ProductDetail() {
 
   const Row = ({ label, value }) =>
     value ? (
-      <div className="flex justify-between border-b border-slate-100 py-2 text-sm">
-        <span className="text-slate-500">{label}</span>
-        <span className="font-medium text-slate-800">{value}</span>
+      <div className="flex justify-between border-b border-line/70 py-2.5 text-sm">
+        <span className="text-ink-500">{label}</span>
+        <span className="font-medium text-ink-800">{value}</span>
       </div>
     ) : null;
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div className="flex items-center justify-between">
-        <Link to="/products" className="text-sm text-brand-600 hover:underline">
+        <Link to="/products" className="link-gold text-sm">
           ← All products
         </Link>
         <div className="flex gap-2">
-          <Link
-            to={`/products/${id}/edit`}
-            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
-          >
+          <Link to={`/products/${id}/edit`} className="btn-ghost px-4 py-2">
             Edit
           </Link>
-          <button
-            onClick={deleteProduct}
-            className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
-          >
+          <button onClick={deleteProduct} className="btn-danger px-4 py-2">
             Delete
           </button>
         </div>
@@ -103,31 +100,29 @@ export default function ProductDetail() {
       <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {/* Image / cover */}
         <div className="md:col-span-1">
-          <div className="flex h-48 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-6xl">
+          <div className="flex h-48 items-center justify-center overflow-hidden rounded-xl border border-line bg-ivory-100 text-ink-500">
             {product.coverImage ? (
-              <img src={product.coverImage} alt={product.name} className="h-full w-full rounded-xl object-cover" />
+              <img src={product.coverImage} alt={product.name} className="h-full w-full object-cover" />
             ) : (
-              '📦'
+              <Package size={56} strokeWidth={1.25} />
             )}
           </div>
         </div>
 
         {/* Info */}
         <div className="md:col-span-2">
-          <span className="rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-medium text-brand-700">
-            {product.category}
-          </span>
-          <h1 className="mt-2 text-2xl font-bold text-slate-900">{product.name}</h1>
-          <p className="text-slate-500">{product.brand} {product.model}</p>
+          <span className="badge">{product.category}</span>
+          <h1 className="mt-3 text-3xl font-bold text-ink-900">{product.name}</h1>
+          <p className="mt-1 text-ink-500">{product.brand} {product.model}</p>
 
           {product.warrantyExpiry && (
             <div
-              className={`mt-3 inline-block rounded-lg px-3 py-1.5 text-sm font-medium ${
+              className={`mt-4 inline-block rounded-lg border px-3 py-1.5 text-sm font-medium ${
                 warrantyDays < 0
-                  ? 'bg-slate-100 text-slate-500'
+                  ? 'border-line bg-ivory-100 text-ink-500'
                   : warrantyDays <= 30
-                  ? 'bg-amber-100 text-amber-700'
-                  : 'bg-emerald-100 text-emerald-700'
+                  ? 'border-gold-200 bg-gold-50 text-gold-700'
+                  : 'border-emerald-200 bg-emerald-50 text-emerald-700'
               }`}
             >
               {warrantyDays < 0
@@ -136,7 +131,7 @@ export default function ProductDetail() {
             </div>
           )}
 
-          <div className="mt-4">
+          <div className="mt-5">
             <Row label="Serial number" value={product.serialNumber} />
             <Row label="Purchase date" value={formatDate(product.purchaseDate)} />
             <Row label="Purchase price" value={product.purchasePrice ? currency(product.purchasePrice) : null} />
@@ -145,20 +140,22 @@ export default function ProductDetail() {
           </div>
 
           {product.notes && (
-            <div className="mt-4 rounded-lg bg-slate-50 p-3 text-sm text-slate-700">{product.notes}</div>
+            <div className="mt-5 rounded-lg border border-line bg-ivory-100/60 p-4 text-sm text-ink-700">
+              {product.notes}
+            </div>
           )}
         </div>
       </div>
 
       {/* Documents */}
-      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="card p-6">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-semibold text-slate-900">Documents ({documents.length})</h2>
+          <h2 className="text-lg font-semibold text-ink-900">Documents ({documents.length})</h2>
           <div className="flex items-center gap-2">
             <select
               value={docType}
               onChange={(e) => setDocType(e.target.value)}
-              className="rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
+              className="input w-auto py-2 text-sm capitalize"
             >
               {DOC_TYPES.map((t) => (
                 <option key={t} value={t}>
@@ -170,43 +167,51 @@ export default function ProductDetail() {
             <button
               onClick={() => fileRef.current?.click()}
               disabled={uploading}
-              className="rounded-lg bg-brand-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
+              className="btn-gold px-4 py-2"
             >
-              {uploading ? 'Uploading…' : '+ Upload'}
+              {uploading ? (
+                'Uploading…'
+              ) : (
+                <>
+                  <Upload size={15} strokeWidth={2} /> Upload
+                </>
+              )}
             </button>
           </div>
         </div>
 
         {documents.length === 0 ? (
-          <p className="py-6 text-center text-sm text-slate-400">
+          <p className="py-8 text-center text-sm text-ink-400">
             No documents yet. Upload invoices, warranty cards, manuals or receipts.
           </p>
         ) : (
-          <ul className="divide-y divide-slate-100">
-            {documents.map((d) => (
-              <li key={d._id} className="flex items-center justify-between py-3">
-                <a
-                  href={docUrl(d)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-3 text-sm text-slate-800 hover:text-brand-600"
-                >
-                  <span className="text-xl">{TYPE_ICON[d.type] || '📎'}</span>
-                  <div>
-                    <p className="font-medium">{d.title}</p>
-                    <p className="text-xs capitalize text-slate-400">
-                      {d.type} · {formatDate(d.createdAt)}
-                    </p>
-                  </div>
-                </a>
-                <button
-                  onClick={() => deleteDoc(d._id)}
-                  className="text-sm text-red-500 hover:underline"
-                >
-                  Remove
-                </button>
-              </li>
-            ))}
+          <ul className="divide-y divide-line/70">
+            {documents.map((d) => {
+              const Icon = TYPE_ICON[d.type] || Paperclip;
+              return (
+                <li key={d._id} className="flex items-center justify-between py-3">
+                  <a
+                    href={docUrl(d)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-3 text-sm text-ink-800 transition hover:text-gold-700"
+                  >
+                    <span className="icon-tile flex h-10 w-10 items-center justify-center">
+                      <Icon size={18} strokeWidth={2} />
+                    </span>
+                    <div>
+                      <p className="font-medium">{d.title}</p>
+                      <p className="text-xs capitalize text-ink-400">
+                        {d.type} · {formatDate(d.createdAt)}
+                      </p>
+                    </div>
+                  </a>
+                  <button onClick={() => deleteDoc(d._id)} className="text-sm font-medium text-red-500 hover:underline">
+                    Remove
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>

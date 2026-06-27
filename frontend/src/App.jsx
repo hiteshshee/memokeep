@@ -6,6 +6,8 @@ import { loadSession } from './store/authSlice.js';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import Layout from './components/Layout.jsx';
 import Spinner from './components/Spinner.jsx';
+import Background from './components/Background.jsx';
+import CursorGlow from './components/CursorGlow.jsx';
 
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
@@ -26,8 +28,11 @@ export default function App() {
   if (!bootstrapped) return <Spinner full />;
 
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
+    <>
+      <Background />
+      <CursorGlow />
+      <Routes>
+        <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
       <Route element={<ProtectedRoute />}>
@@ -40,7 +45,8 @@ export default function App() {
         </Route>
       </Route>
 
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </>
   );
 }

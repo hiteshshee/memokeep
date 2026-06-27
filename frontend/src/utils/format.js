@@ -17,4 +17,18 @@ export const CATEGORIES = [
   'Computer', 'Kitchen', 'Tools', 'Other',
 ];
 
+// A distinct colour tile per category so listings feel lively, not monotonous.
+export const CATEGORY_TILE = {
+  Electronics: 'tile-blue',
+  Appliances: 'tile-cyan',
+  Furniture: 'tile-orange',
+  Vehicle: 'tile-red',
+  Mobile: 'tile-purple',
+  Computer: 'tile-indigo',
+  Kitchen: 'tile-green',
+  Tools: 'tile-pink',
+  Other: 'tile-blue',
+};
+export const categoryTile = (c) => CATEGORY_TILE[c] || 'tile-blue';
+
 export const DOC_TYPES = ['invoice', 'warranty', 'manual', 'receipt', 'image', 'other'];

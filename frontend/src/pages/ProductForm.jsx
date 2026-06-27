@@ -66,83 +66,77 @@ export default function ProductForm() {
 
   if (loading) return <Spinner />;
 
-  const field = 'w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100';
-  const label = 'mb-1 block text-sm font-medium text-slate-700';
-
   return (
     <div className="mx-auto max-w-2xl">
-      <Link to={editing ? `/products/${id}` : '/products'} className="text-sm text-brand-600 hover:underline">
+      <Link to={editing ? `/products/${id}` : '/products'} className="link-gold text-sm">
         ← Back
       </Link>
-      <h1 className="mb-6 mt-2 text-2xl font-bold text-slate-900">
+      <h1 className="mb-2 mt-3 text-3xl font-bold text-ink-900">
         {editing ? 'Edit Product' : 'Add Product'}
       </h1>
+      <div className="mb-6 rule-gold" />
 
-      {error && <div className="mb-4 rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">{error}</div>}
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
-      <form onSubmit={submit} className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <form onSubmit={submit} className="card space-y-5 p-6">
         <div>
-          <label className={label}>Product name *</label>
-          <input required value={form.name} onChange={set('name')} className={field} placeholder="e.g. Samsung Refrigerator" />
+          <label className="label">Product name *</label>
+          <input required value={form.name} onChange={set('name')} className="input" placeholder="e.g. Samsung Refrigerator" />
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div>
-            <label className={label}>Category</label>
-            <select value={form.category} onChange={set('category')} className={field}>
+            <label className="label">Category</label>
+            <select value={form.category} onChange={set('category')} className="input">
               {CATEGORIES.map((c) => (
                 <option key={c} value={c}>{c}</option>
               ))}
             </select>
           </div>
           <div>
-            <label className={label}>Brand</label>
-            <input value={form.brand} onChange={set('brand')} className={field} />
+            <label className="label">Brand</label>
+            <input value={form.brand} onChange={set('brand')} className="input" />
           </div>
           <div>
-            <label className={label}>Model</label>
-            <input value={form.model} onChange={set('model')} className={field} />
+            <label className="label">Model</label>
+            <input value={form.model} onChange={set('model')} className="input" />
           </div>
           <div>
-            <label className={label}>Serial number</label>
-            <input value={form.serialNumber} onChange={set('serialNumber')} className={field} />
+            <label className="label">Serial number</label>
+            <input value={form.serialNumber} onChange={set('serialNumber')} className="input" />
           </div>
           <div>
-            <label className={label}>Purchase date</label>
-            <input type="date" value={form.purchaseDate} onChange={set('purchaseDate')} className={field} />
+            <label className="label">Purchase date</label>
+            <input type="date" value={form.purchaseDate} onChange={set('purchaseDate')} className="input" />
           </div>
           <div>
-            <label className={label}>Purchase price (₹)</label>
-            <input type="number" min="0" value={form.purchasePrice} onChange={set('purchasePrice')} className={field} />
+            <label className="label">Purchase price (₹)</label>
+            <input type="number" min="0" value={form.purchasePrice} onChange={set('purchasePrice')} className="input" />
           </div>
           <div>
-            <label className={label}>Purchased from</label>
-            <input value={form.purchasedFrom} onChange={set('purchasedFrom')} className={field} placeholder="Amazon, local store…" />
+            <label className="label">Purchased from</label>
+            <input value={form.purchasedFrom} onChange={set('purchasedFrom')} className="input" placeholder="Amazon, local store…" />
           </div>
           <div>
-            <label className={label}>Warranty (months)</label>
-            <input type="number" min="0" value={form.warrantyMonths} onChange={set('warrantyMonths')} className={field} />
+            <label className="label">Warranty (months)</label>
+            <input type="number" min="0" value={form.warrantyMonths} onChange={set('warrantyMonths')} className="input" />
           </div>
         </div>
 
         <div>
-          <label className={label}>Notes</label>
-          <textarea rows={3} value={form.notes} onChange={set('notes')} className={field} />
+          <label className="label">Notes</label>
+          <textarea rows={3} value={form.notes} onChange={set('notes')} className="input" />
         </div>
 
-        <div className="flex gap-3">
-          <button
-            type="submit"
-            disabled={saving}
-            className="rounded-lg bg-brand-600 px-5 py-2.5 font-medium text-white hover:bg-brand-700 disabled:opacity-60"
-          >
+        <div className="flex gap-3 pt-1">
+          <button type="submit" disabled={saving} className="btn-primary">
             {saving ? 'Saving…' : editing ? 'Save Changes' : 'Create Product'}
           </button>
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="rounded-lg border border-slate-300 px-5 py-2.5 font-medium text-slate-600 hover:bg-slate-50"
-          >
+          <button type="button" onClick={() => navigate(-1)} className="btn-ghost">
             Cancel
           </button>
         </div>

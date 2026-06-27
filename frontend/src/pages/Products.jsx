@@ -1,15 +1,23 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
+import { Package, Plus, Search } from 'lucide-react';
 import api from '../api/client.js';
 import Spinner from '../components/Spinner.jsx';
-import { currency, formatDate, CATEGORIES } from '../utils/format.js';
+import PageHeader from '../components/PageHeader.jsx';
+import { currency, formatDate, CATEGORIES, categoryTile } from '../utils/format.js';
 
 export default function Products() {
+  const [searchParams] = useSearchParams();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState('');
-  const [category, setCategory] = useState('');
+  const [category, setCategory] = useState(searchParams.get('category') || '');
   const [sort, setSort] = useState('-createdAt');
+
+  // Honour ?category= shortcuts coming from the sidebar.
+  useEffect(() => {
+    setCategory(searchParams.get('category') || '');
+  }, [searchParams]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -31,29 +39,28 @@ export default function Products() {
   }, [load]);
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">Products</h1>
-        <Link
-          to="/products/new"
-          className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
-        >
-          + Add Product
-        </Link>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Products"
+        subtitle="Your complete collection."
+        action={
+          <Link to="/products/new" className="btn-primary">
+            <Plus size={16} strokeWidth={2.25} /> Add Product
+          </Link>
+        }
+      />
 
       <div className="flex flex-col gap-3 sm:flex-row">
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search by name, brand, model…"
-          className="flex-1 rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
-        />
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-brand-500"
-        >
+        <div className="relative flex-1">
+          <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-400" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search by name, brand, model…"
+            className="input pl-10"
+          />
+        </div>
+        <select value={category} onChange={(e) => setCategory(e.target.value)} className="input sm:w-48">
           <option value="">All categories</option>
           {CATEGORIES.map((c) => (
             <option key={c} value={c}>
@@ -61,11 +68,7 @@ export default function Products() {
             </option>
           ))}
         </select>
-        <select
-          value={sort}
-          onChange={(e) => setSort(e.target.value)}
-          className="rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-brand-500"
-        >
+        <select value={sort} onChange={(e) => setSort(e.target.value)} className="input sm:w-48">
           <option value="-createdAt">Newest</option>
           <option value="createdAt">Oldest</option>
           <option value="name">Name A–Z</option>
@@ -77,42 +80,40 @@ export default function Products() {
       {loading ? (
         <Spinner />
       ) : items.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-slate-300 py-16 text-center">
-          <p className="text-slate-400">No products found.</p>
+        <div className="rounded-xl border border-dashed border-line py-16 text-center">
+          <p className="text-ink-400">No products found.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="reveal-stagger grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {items.map((p) => (
             <Link
               key={p._id}
               to={`/products/${p._id}`}
-              className="group overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
+              className="group card overflow-hidden p-0"
             >
-              <div className="flex h-36 items-center justify-center bg-slate-50 text-5xl">
+              <div className="flex h-40 items-center justify-center overflow-hidden">
                 {p.coverImage ? (
-                  <img src={p.coverImage} alt={p.name} className="h-full w-full object-cover" />
+                  <img src={p.coverImage} alt={p.name} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
                 ) : (
-                  '📦'
+                  <span className={`icon-tile ${categoryTile(p.category)} h-full w-full rounded-none`}>
+                    <Package size={44} strokeWidth={1.25} />
+                  </span>
                 )}
               </div>
               <div className="p-4">
-                <div className="mb-1 flex items-center justify-between">
-                  <span className="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
-                    {p.category}
-                  </span>
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <span className="badge">{p.category}</span>
                   {p.purchasePrice > 0 && (
-                    <span className="text-sm font-semibold text-slate-700">
+                    <span className="font-display text-sm font-semibold text-ink-800">
                       {currency(p.purchasePrice)}
                     </span>
                   )}
                 </div>
-                <h3 className="truncate font-semibold text-slate-900 group-hover:text-brand-600">
+                <h3 className="truncate font-display text-base font-semibold text-ink-900 group-hover:text-gold-700">
                   {p.name}
                 </h3>
-                <p className="truncate text-sm text-slate-400">{p.brand || '—'}</p>
-                <p className="mt-2 text-xs text-slate-400">
-                  Purchased {formatDate(p.purchaseDate)}
-                </p>
+                <p className="truncate text-sm text-ink-400">{p.brand || '—'}</p>
+                <p className="mt-2 text-xs text-ink-400">Purchased {formatDate(p.purchaseDate)}</p>
               </div>
             </Link>
           ))}
