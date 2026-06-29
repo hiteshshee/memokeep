@@ -296,6 +296,23 @@ h3,
   .floaty {
     animation: floaty 7s ease-in-out infinite;
   }
+
+  /* Skeleton shimmer placeholder */
+  .skeleton {
+    border-radius: 0.5rem;
+    background: linear-gradient(90deg, #eef2fb 25%, #e3e9f5 50%, #eef2fb 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shine 1.5s ease-in-out infinite;
+  }
+}
+
+@keyframes skeleton-shine {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* ---------- Custom cursor ---------- */

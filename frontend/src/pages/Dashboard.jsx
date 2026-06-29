@@ -4,16 +4,23 @@ import { useSelector } from 'react-redux';
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend,
 } from 'recharts';
-import { Package, FileText, AlarmClock, Wallet, ArrowRight } from 'lucide-react';
+import { Package, FolderLock, CreditCard, AlarmClock, Wallet, ArrowRight } from 'lucide-react';
 import api from '../api/client.js';
-import Spinner from '../components/Spinner.jsx';
 import PageHeader from '../components/PageHeader.jsx';
 import CountUp from '../components/CountUp.jsx';
+import { DashboardSkeleton } from '../components/Skeleton.jsx';
 import { currency, formatDate, daysUntil } from '../utils/format.js';
 
 // Colourful (non-monotonous) palette for the chart + rotating tiles.
 const COLORS = ['#2f6bff', '#7c3aed', '#ec4899', '#f97316', '#22c55e', '#06b6d4', '#eab308', '#f43f5e', '#14b8a6'];
 const TILES = ['tile-blue', 'tile-purple', 'tile-pink', 'tile-green', 'tile-orange', 'tile-cyan', 'tile-indigo', 'tile-red'];
+
+// Icon + colour per "coming up" item kind.
+const KIND_META = {
+  warranty: { icon: AlarmClock, tile: 'tile-orange' },
+  document: { icon: FolderLock, tile: 'tile-cyan' },
+  subscription: { icon: CreditCard, tile: 'tile-purple' },
+};
 
 function StatCard({ label, value, Icon, tile, format }) {
   return (
@@ -46,9 +53,9 @@ export default function Dashboard() {
   }, []);
 
   if (error) return <p className="text-red-500">{error}</p>;
-  if (!data) return <Spinner />;
+  if (!data) return <DashboardSkeleton />;
 
-  const { stats, expiringWarranties, byCategory, recentProducts } = data;
+  const { stats, comingUp, byCategory, recentProducts } = data;
   const pieData = byCategory.map((c) => ({ name: c._id, value: c.count }));
 
   return (
@@ -58,8 +65,8 @@ export default function Dashboard() {
       {/* Stat row — each a different colour */}
       <div className="reveal-stagger grid grid-cols-2 gap-5 lg:grid-cols-4">
         <StatCard label="Products" value={stats.productCount} Icon={Package} tile="tile-blue" />
-        <StatCard label="Documents" value={stats.documentCount} Icon={FileText} tile="tile-purple" />
-        <StatCard label="Expiring (30d)" value={stats.expiringCount} Icon={AlarmClock} tile="tile-orange" />
+        <StatCard label="Documents" value={stats.vaultCount} Icon={FolderLock} tile="tile-cyan" />
+        <StatCard label="Subs / month" value={stats.monthlySpend} format={currency} Icon={CreditCard} tile="tile-purple" />
         <StatCard label="Total Value" value={stats.totalValue} format={currency} Icon={Wallet} tile="tile-green" />
       </div>
 
@@ -149,30 +156,34 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Expiring warranties */}
+        {/* Coming up — warranties, documents & subscription renewals */}
         <div className="card p-6">
-          <h2 className="mb-4 text-lg font-semibold text-ink-900">Expiring Soon</h2>
-          {expiringWarranties.length === 0 ? (
-            <p className="text-sm text-ink-400">Nothing expiring in the next 30 days.</p>
+          <h2 className="mb-4 text-lg font-semibold text-ink-900">Coming up</h2>
+          {comingUp.length === 0 ? (
+            <p className="text-sm text-ink-400">Nothing due in the next 30 days. 🎉</p>
           ) : (
             <ul className="divide-y divide-line">
-              {expiringWarranties.map((p) => {
-                const days = daysUntil(p.warrantyExpiry);
+              {comingUp.map((u, i) => {
+                const meta = KIND_META[u.kind] || KIND_META.warranty;
+                const days = daysUntil(u.date);
                 return (
-                  <li key={p._id} className="flex items-center justify-between py-2.5">
-                    <div className="min-w-0">
-                      <Link to={`/products/${p._id}`} className="block truncate font-semibold text-ink-700 transition hover:text-gold-600">
-                        {p.name}
-                      </Link>
-                      <p className="truncate text-xs text-ink-400">{p.brand || p.category}</p>
-                    </div>
-                    <span
-                      className={`ml-2 shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                        days <= 7 ? 'bg-red-100 text-red-600' : 'bg-gold-50 text-gold-600'
-                      }`}
-                    >
-                      {days}d
-                    </span>
+                  <li key={i}>
+                    <Link to={u.link} className="group flex items-center gap-3 py-2.5">
+                      <span className={`icon-tile ${meta.tile} flex h-9 w-9 shrink-0 items-center justify-center`}>
+                        <meta.icon size={15} strokeWidth={2} />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-ink-800 transition group-hover:text-gold-600">{u.title}</p>
+                        <p className="truncate text-xs text-ink-400">{u.sub}</p>
+                      </div>
+                      <span
+                        className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                          days <= 7 ? 'bg-red-100 text-red-600' : 'bg-gold-50 text-gold-600'
+                        }`}
+                      >
+                        {days <= 0 ? 'today' : `${days}d`}
+                      </span>
+                    </Link>
                   </li>
                 );
               })}

@@ -5,7 +5,7 @@ import {
   X, Pencil, Trash2,
 } from 'lucide-react';
 import api from '../api/client.js';
-import Spinner from '../components/Spinner.jsx';
+import { CardsSkeleton } from '../components/Skeleton.jsx';
 import PageHeader from '../components/PageHeader.jsx';
 import CountUp from '../components/CountUp.jsx';
 import { toast } from '../components/Toast.jsx';
@@ -135,7 +135,7 @@ export default function Subscriptions() {
       </div>
 
       {loading ? (
-        <Spinner />
+        <CardsSkeleton />
       ) : items.length === 0 ? (
         <div className="card flex flex-col items-center gap-3 py-16 text-center">
           <span className="icon-tile tile-red flex h-14 w-14 items-center justify-center">

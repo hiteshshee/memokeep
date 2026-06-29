@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Package, Plus, Search } from 'lucide-react';
 import api from '../api/client.js';
-import Spinner from '../components/Spinner.jsx';
+import { ProductsSkeleton } from '../components/Skeleton.jsx';
 import PageHeader from '../components/PageHeader.jsx';
 import { currency, formatDate, CATEGORIES, categoryTile } from '../utils/format.js';
 
@@ -78,7 +78,7 @@ export default function Products() {
       </div>
 
       {loading ? (
-        <Spinner />
+        <ProductsSkeleton />
       ) : items.length === 0 ? (
         <div className="rounded-xl border border-dashed border-line py-16 text-center">
           <p className="text-ink-400">No products found.</p>
