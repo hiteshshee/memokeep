@@ -14,6 +14,11 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true, minlength: 6, select: false },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
     avatar: { type: String, default: '' },
+    // Email verification (OTP) — account is unusable until verified.
+    isVerified: { type: Boolean, default: false },
+    otpHash: { type: String, select: false },
+    otpExpires: { type: Date, select: false },
+    otpAttempts: { type: Number, default: 0, select: false },
     // Hashed refresh tokens currently valid for this user (supports multi-device).
     refreshTokens: { type: [String], default: [], select: false },
   },
@@ -35,6 +40,9 @@ userSchema.methods.toJSON = function toJSON() {
   const obj = this.toObject();
   delete obj.password;
   delete obj.refreshTokens;
+  delete obj.otpHash;
+  delete obj.otpExpires;
+  delete obj.otpAttempts;
   return obj;
 };
 

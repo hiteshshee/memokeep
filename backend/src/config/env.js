@@ -18,10 +18,17 @@ const env = {
     apiKey: process.env.CLOUDINARY_API_KEY,
     apiSecret: process.env.CLOUDINARY_API_SECRET,
   },
+  email: {
+    user: process.env.EMAIL_USER, // sending Gmail address
+    pass: process.env.EMAIL_PASS, // Gmail App Password (16 chars, no spaces)
+    from: process.env.EMAIL_FROM || `MemoKeep <${process.env.EMAIL_USER || 'no-reply@memokeep.app'}>`,
+  },
 };
 
 env.cloudinary.enabled = Boolean(
   env.cloudinary.cloudName && env.cloudinary.apiKey && env.cloudinary.apiSecret
 );
+
+env.email.enabled = Boolean(env.email.user && env.email.pass);
 
 export default env;

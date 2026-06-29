@@ -1,13 +1,33 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api, { setAccessToken } from '../api/client.js';
 
+// Step 1: send the signup details — backend emails an OTP, no login yet.
 export const register = createAsyncThunk('auth/register', async (payload, { rejectWithValue }) => {
   try {
     const { data } = await api.post('/auth/register', payload);
+    return data; // { requiresVerification, email, message, devOtp? }
+  } catch (err) {
+    return rejectWithValue(err.response?.data?.message || 'Registration failed');
+  }
+});
+
+// Step 2: verify the OTP — on success the account is created/verified and logged in.
+export const verifyOtp = createAsyncThunk('auth/verifyOtp', async (payload, { rejectWithValue }) => {
+  try {
+    const { data } = await api.post('/auth/verify-otp', payload);
     setAccessToken(data.accessToken);
     return data.user;
   } catch (err) {
-    return rejectWithValue(err.response?.data?.message || 'Registration failed');
+    return rejectWithValue(err.response?.data?.message || 'Verification failed');
+  }
+});
+
+export const resendOtp = createAsyncThunk('auth/resendOtp', async (email, { rejectWithValue }) => {
+  try {
+    const { data } = await api.post('/auth/resend-otp', { email });
+    return data; // { message, devOtp? }
+  } catch (err) {
+    return rejectWithValue(err.response?.data?.message || 'Could not resend code');
   }
 });
 
@@ -17,7 +37,12 @@ export const login = createAsyncThunk('auth/login', async (payload, { rejectWith
     setAccessToken(data.accessToken);
     return data.user;
   } catch (err) {
-    return rejectWithValue(err.response?.data?.message || 'Login failed');
+    // Unverified accounts get a 403 telling us to go verify (with a fresh OTP).
+    const d = err.response?.data;
+    if (d?.requiresVerification) {
+      return rejectWithValue({ requiresVerification: true, email: d.email, devOtp: d.devOtp });
+    }
+    return rejectWithValue(d?.message || 'Login failed');
   }
 });
 
@@ -48,9 +73,18 @@ const authSlice = createSlice({
     status: 'idle', // idle | loading | authenticated | error
     bootstrapped: false, // session restore attempt finished
     error: null,
+    awaitingOtp: false, // signup is waiting on the email OTP
+    pendingEmail: null,
+    devOtp: null, // shown only in dev when email isn't configured
   },
   reducers: {
     clearError: (state) => {
+      state.error = null;
+    },
+    resetOtp: (state) => {
+      state.awaitingOtp = false;
+      state.pendingEmail = null;
+      state.devOtp = null;
       state.error = null;
     },
   },
@@ -69,12 +103,45 @@ const authSlice = createSlice({
     };
 
     builder
+      // Step 1: details submitted → awaiting OTP (no user yet)
       .addCase(register.pending, pending)
-      .addCase(register.fulfilled, fulfilled)
+      .addCase(register.fulfilled, (state, action) => {
+        state.status = 'idle';
+        state.awaitingOtp = true;
+        state.pendingEmail = action.payload.email;
+        state.devOtp = action.payload.devOtp || null;
+      })
       .addCase(register.rejected, rejected)
+      // Step 2: OTP verified → logged in
+      .addCase(verifyOtp.pending, pending)
+      .addCase(verifyOtp.fulfilled, (state, action) => {
+        state.status = 'authenticated';
+        state.user = action.payload;
+        state.awaitingOtp = false;
+        state.pendingEmail = null;
+        state.devOtp = null;
+      })
+      .addCase(verifyOtp.rejected, rejected)
+      .addCase(resendOtp.fulfilled, (state, action) => {
+        state.devOtp = action.payload.devOtp || null;
+        state.error = null;
+      })
+      .addCase(resendOtp.rejected, rejected)
+      // Login — may bounce to the OTP step if the account isn't verified
       .addCase(login.pending, pending)
       .addCase(login.fulfilled, fulfilled)
-      .addCase(login.rejected, rejected)
+      .addCase(login.rejected, (state, action) => {
+        if (action.payload && action.payload.requiresVerification) {
+          state.status = 'idle';
+          state.error = null;
+          state.awaitingOtp = true;
+          state.pendingEmail = action.payload.email;
+          state.devOtp = action.payload.devOtp || null;
+        } else {
+          state.status = 'error';
+          state.error = action.payload;
+        }
+      })
       .addCase(loadSession.fulfilled, (state, action) => {
         state.status = 'authenticated';
         state.user = action.payload;
@@ -86,9 +153,12 @@ const authSlice = createSlice({
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
         state.status = 'idle';
+        state.awaitingOtp = false;
+        state.pendingEmail = null;
+        state.devOtp = null;
       });
   },
 });
 
-export const { clearError } = authSlice.actions;
+export const { clearError, resetOtp } = authSlice.actions;
 export default authSlice.reducer;

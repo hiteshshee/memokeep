@@ -8,11 +8,16 @@ export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' });
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { status, error, user } = useSelector((s) => s.auth);
+  const { status, error, user, awaitingOtp } = useSelector((s) => s.auth);
 
   useEffect(() => {
     if (user) navigate('/');
   }, [user, navigate]);
+
+  // An unverified login bounces here → send them to the OTP screen.
+  useEffect(() => {
+    if (awaitingOtp) navigate('/register');
+  }, [awaitingOtp, navigate]);
 
   useEffect(() => () => dispatch(clearError()), [dispatch]);
 
