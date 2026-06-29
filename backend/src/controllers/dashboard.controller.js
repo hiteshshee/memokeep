@@ -66,6 +66,7 @@ export const getDashboard = asyncHandler(async (req, res) => {
       totalValue: valueAgg[0]?.total || 0,
     },
     comingUp: comingUp.slice(0, 8),
+    expiringWarranties,
     byCategory,
     recentProducts,
   });

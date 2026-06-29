@@ -55,7 +55,7 @@ export default function Dashboard() {
   if (error) return <p className="text-red-500">{error}</p>;
   if (!data) return <DashboardSkeleton />;
 
-  const { stats, comingUp, byCategory, recentProducts } = data;
+  const { stats, comingUp, expiringWarranties, byCategory, recentProducts } = data;
   const pieData = byCategory.map((c) => ({ name: c._id, value: c.count }));
 
   return (
@@ -190,6 +190,35 @@ export default function Dashboard() {
             </ul>
           )}
         </div>
+      </div>
+
+      {/* Warranties expiring soon */}
+      <div className="card p-6">
+        <h2 className="mb-4 text-lg font-semibold text-ink-900">Warranties expiring soon</h2>
+        {expiringWarranties.length === 0 ? (
+          <p className="text-sm text-ink-400">No warranties expiring in the next 30 days. 🎉</p>
+        ) : (
+          <ul className="grid gap-x-8 sm:grid-cols-2">
+            {expiringWarranties.map((p) => {
+              const days = daysUntil(p.warrantyExpiry);
+              return (
+                <li key={p._id} className="flex items-center justify-between border-b border-line py-2.5">
+                  <div className="min-w-0">
+                    <Link to={`/products/${p._id}`} className="block truncate font-semibold text-ink-700 transition hover:text-gold-600">
+                      {p.name}
+                    </Link>
+                    <p className="truncate text-xs text-ink-400">
+                      {p.brand || p.category} · {formatDate(p.warrantyExpiry)}
+                    </p>
+                  </div>
+                  <span className={`ml-2 shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${days <= 7 ? 'bg-red-100 text-red-600' : 'bg-gold-50 text-gold-600'}`}>
+                    {days}d
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
     </div>
   );
