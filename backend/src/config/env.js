@@ -23,6 +23,11 @@ const env = {
     pass: process.env.EMAIL_PASS, // Gmail App Password (16 chars, no spaces)
     from: process.env.EMAIL_FROM || `MemoKeep <${process.env.EMAIL_USER || 'no-reply@memokeep.app'}>`,
   },
+  cron: {
+    secret: process.env.CRON_SECRET, // Vercel Cron sends this as a Bearer token
+    reminderDays: Number(process.env.REMINDER_DAYS) || 14, // warn this many days before expiry
+  },
+  appUrl: process.env.APP_URL || process.env.CLIENT_URL?.split(',')[0] || 'http://localhost:5173',
 };
 
 env.cloudinary.enabled = Boolean(

@@ -43,4 +43,60 @@ export async function sendOtpEmail(to, name, otp) {
   return true;
 }
 
+function reminderEmailHtml(name, items, appUrl) {
+  const rows = items
+    .map(
+      (it) => `
+      <tr>
+        <td style="padding:12px 0;border-bottom:1px solid #e7ecf5">
+          <div style="font-weight:600;color:#10193b">${it.name}</div>
+          <div style="font-size:13px;color:#8a94ad">${it.brand || it.category || ''}</div>
+        </td>
+        <td style="padding:12px 0;border-bottom:1px solid #e7ecf5;text-align:right;white-space:nowrap">
+          <span style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;${
+            it.daysLeft <= 7 ? 'background:#ffe1e6;color:#e11d48' : 'background:#fff3d6;color:#b7791f'
+          }">${it.daysLeft <= 0 ? 'expires today' : `${it.daysLeft} day${it.daysLeft === 1 ? '' : 's'} left`}</span>
+          <div style="font-size:12px;color:#8a94ad;margin-top:4px">${it.expiryStr}</div>
+        </td>
+      </tr>`
+    )
+    .join('');
+
+  return `
+  <div style="font-family:Inter,Segoe UI,Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px;background:#f4f7fe;border-radius:16px;color:#10193b">
+    <p style="font-weight:700;letter-spacing:.2em;color:#2f6bff;margin:0 0 24px">MEMOKEEP</p>
+    <h1 style="font-size:22px;margin:0 0 8px">⏰ Warranties expiring soon</h1>
+    <p style="color:#5b6788;margin:0 0 20px">Hi ${name || 'there'}, a heads-up that ${
+      items.length === 1 ? 'one of your products is' : `${items.length} of your products are`
+    } about to go out of warranty:</p>
+    <table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid #e7ecf5;border-radius:12px;padding:8px 16px">
+      ${rows}
+    </table>
+    <div style="text-align:center;margin:28px 0 8px">
+      <a href="${appUrl}" style="display:inline-block;background:#2f6bff;color:#fff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:12px">Open MemoKeep</a>
+    </div>
+    <p style="color:#8a94ad;font-size:13px;margin:16px 0 0">Tip: if you're still in warranty, now's the time to claim repairs or buy an extension.</p>
+  </div>`;
+}
+
+// Send a digest of the user's soon-to-expire warranties.
+export async function sendWarrantyReminderEmail(to, name, items, appUrl) {
+  const list = items.map((i) => `${i.name} — ${i.daysLeft <= 0 ? 'expires today' : `${i.daysLeft} days left`}`).join('\n');
+  if (!transporter) {
+    console.log(`\n📧 [DEV] Warranty reminder for ${to}:\n${list}\n`);
+    return true;
+  }
+  await transporter.sendMail({
+    from: env.email.from,
+    to,
+    subject:
+      items.length === 1
+        ? `⏰ ${items[0].name} warranty expires soon`
+        : `⏰ ${items.length} warranties expiring soon`,
+    html: reminderEmailHtml(name, items, appUrl),
+    text: `Warranties expiring soon:\n${list}\n\nOpen MemoKeep: ${appUrl}`,
+  });
+  return true;
+}
+
 export default transporter;

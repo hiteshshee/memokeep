@@ -27,6 +27,9 @@ const productSchema = new mongoose.Schema(
     purchasedFrom: { type: String, trim: true, default: '' },
     warrantyMonths: { type: Number, default: 0, min: 0 },
     warrantyExpiry: { type: Date },
+    // When we last emailed an "expiring soon" reminder for this product
+    // (null = never). Reset whenever the warranty window changes.
+    reminderSentAt: { type: Date, default: null },
     notes: { type: String, default: '' },
     coverImage: { type: String, default: '' },
     images: { type: [String], default: [] },
@@ -41,6 +44,10 @@ productSchema.pre('save', function computeWarranty(next) {
     const expiry = new Date(this.purchaseDate);
     expiry.setMonth(expiry.getMonth() + this.warrantyMonths);
     this.warrantyExpiry = expiry;
+  }
+  // If the warranty period changed, allow a fresh reminder for the new window.
+  if (this.isModified('purchaseDate') || this.isModified('warrantyMonths')) {
+    this.reminderSentAt = null;
   }
   next();
 });
