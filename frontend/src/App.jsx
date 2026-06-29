@@ -16,6 +16,7 @@ import Dashboard from './pages/Dashboard.jsx';
 import Products from './pages/Products.jsx';
 import ProductForm from './pages/ProductForm.jsx';
 import ProductDetail from './pages/ProductDetail.jsx';
+import Settings from './pages/Settings.jsx';
 import NotFound from './pages/NotFound.jsx';
 
 export default function App() {
@@ -44,6 +45,7 @@ export default function App() {
           <Route path="/products/new" element={<ProductForm />} />
           <Route path="/products/:id" element={<ProductDetail />} />
           <Route path="/products/:id/edit" element={<ProductForm />} />
+          <Route path="/settings" element={<Settings />} />
         </Route>
       </Route>
 

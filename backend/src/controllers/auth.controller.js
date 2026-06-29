@@ -211,3 +211,30 @@ export const logout = asyncHandler(async (req, res) => {
 export const me = asyncHandler(async (req, res) => {
   res.json({ user: req.user });
 });
+
+// PATCH /api/auth/profile  — update name + reminder preference
+export const updateProfile = asyncHandler(async (req, res) => {
+  const { name, reminderOptOut } = req.body;
+  const user = req.user;
+  if (typeof name === 'string' && name.trim()) user.name = name.trim();
+  if (typeof reminderOptOut === 'boolean') user.reminderOptOut = reminderOptOut;
+  await user.save();
+  res.json({ user });
+});
+
+// PATCH /api/auth/password  — change password (requires the current one)
+export const changePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword) {
+    throw new ApiError(400, 'Current and new password are required');
+  }
+  if (newPassword.length < 6) throw new ApiError(400, 'New password must be at least 6 characters');
+
+  const user = await User.findById(req.user._id).select('+password');
+  const ok = await user.comparePassword(currentPassword);
+  if (!ok) throw new ApiError(401, 'Current password is incorrect');
+
+  user.password = newPassword; // re-hashed by the model's pre-save hook
+  await user.save();
+  res.json({ message: 'Password updated successfully' });
+});

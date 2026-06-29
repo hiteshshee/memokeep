@@ -6,3 +6,6 @@ build/
 *.log
 uploads/
 .DS_Store
+
+# Personal/local-only notes — never commit
+MemoKeep-Documentation.md

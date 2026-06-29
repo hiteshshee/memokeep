@@ -46,6 +46,24 @@ export const login = createAsyncThunk('auth/login', async (payload, { rejectWith
   }
 });
 
+export const updateProfile = createAsyncThunk('auth/updateProfile', async (payload, { rejectWithValue }) => {
+  try {
+    const { data } = await api.patch('/auth/profile', payload);
+    return data.user;
+  } catch (err) {
+    return rejectWithValue(err.response?.data?.message || 'Update failed');
+  }
+});
+
+export const changePassword = createAsyncThunk('auth/changePassword', async (payload, { rejectWithValue }) => {
+  try {
+    const { data } = await api.patch('/auth/password', payload);
+    return data.message;
+  } catch (err) {
+    return rejectWithValue(err.response?.data?.message || 'Password change failed');
+  }
+});
+
 // Try to restore the session on app load using the refresh cookie.
 export const loadSession = createAsyncThunk('auth/load', async (_, { rejectWithValue }) => {
   try {
@@ -141,6 +159,9 @@ const authSlice = createSlice({
           state.status = 'error';
           state.error = action.payload;
         }
+      })
+      .addCase(updateProfile.fulfilled, (state, action) => {
+        state.user = action.payload;
       })
       .addCase(loadSession.fulfilled, (state, action) => {
         state.status = 'authenticated';

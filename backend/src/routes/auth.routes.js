@@ -2,6 +2,7 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import {
   register, verifyOtp, resendOtp, login, refresh, logout, me,
+  updateProfile, changePassword,
 } from '../controllers/auth.controller.js';
 import { protect } from '../middleware/auth.js';
 
@@ -23,5 +24,7 @@ router.post('/login', authLimiter, login);
 router.post('/refresh', refresh);
 router.post('/logout', logout);
 router.get('/me', protect, me);
+router.patch('/profile', protect, updateProfile);
+router.patch('/password', protect, changePassword);
 
 export default router;

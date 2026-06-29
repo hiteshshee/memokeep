@@ -28,12 +28,12 @@ export const warrantyReminders = asyncHandler(async (req, res) => {
     reminderSentAt: null,
   })
     .select('name brand category warrantyExpiry owner')
-    .populate('owner', 'name email isVerified');
+    .populate('owner', 'name email isVerified reminderOptOut');
 
-  // Group by verified owner.
+  // Group by verified owner who hasn't opted out of reminders.
   const byUser = new Map();
   for (const p of products) {
-    if (!p.owner || !p.owner.isVerified || !p.owner.email) continue;
+    if (!p.owner || !p.owner.isVerified || !p.owner.email || p.owner.reminderOptOut) continue;
     const key = p.owner._id.toString();
     if (!byUser.has(key)) byUser.set(key, { user: p.owner, items: [], ids: [] });
     const bucket = byUser.get(key);

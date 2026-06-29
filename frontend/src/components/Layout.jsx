@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   LayoutDashboard, Package, PlusCircle, LogOut, Sparkles,
-  Smartphone, Laptop, Tv, Refrigerator,
+  Smartphone, Laptop, Tv, Refrigerator, Settings as SettingsIcon,
 } from 'lucide-react';
 import { logout } from '../store/authSlice.js';
 
@@ -127,9 +127,20 @@ export default function Layout() {
             <span className="hidden text-sm text-ink-500 sm:inline">
               Hi, <span className="font-medium text-ink-800">{user?.name?.split(' ')[0]}</span>
             </span>
-            <div className="flex h-9 w-9 items-center justify-center rounded-full border border-gold-300 bg-gold-50 font-display font-semibold text-gold-700">
+            <Link
+              to="/settings"
+              title="Settings"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-line text-ink-500 transition hover:border-gold-300 hover:text-ink-900"
+            >
+              <SettingsIcon size={17} strokeWidth={2} />
+            </Link>
+            <Link
+              to="/settings"
+              title="Account settings"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-gold-300 bg-gold-50 font-display font-semibold text-gold-700 transition hover:brightness-95"
+            >
               {user?.name?.[0]?.toUpperCase()}
-            </div>
+            </Link>
             <button onClick={handleLogout} className="btn-ghost px-3 py-1.5 md:hidden">
               Logout
             </button>
