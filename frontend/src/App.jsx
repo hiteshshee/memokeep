@@ -8,6 +8,7 @@ import Layout from './components/Layout.jsx';
 import Spinner from './components/Spinner.jsx';
 import Background from './components/Background.jsx';
 import CursorGlow from './components/CursorGlow.jsx';
+import { Toaster } from './components/Toast.jsx';
 
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
@@ -31,6 +32,7 @@ export default function App() {
     <>
       <Background />
       <CursorGlow />
+      <Toaster />
       <Routes>
         <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />

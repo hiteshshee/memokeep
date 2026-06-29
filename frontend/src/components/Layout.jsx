@@ -1,4 +1,5 @@
-import { NavLink, Link, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   LayoutDashboard, Package, PlusCircle, LogOut, Sparkles,
@@ -24,6 +25,7 @@ export default function Layout() {
   const { user } = useSelector((s) => s.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = async () => {
     await dispatch(logout());
@@ -134,7 +136,17 @@ export default function Layout() {
           </div>
         </header>
         <main className="flex-1 p-6 lg:p-8">
-          <Outlet />
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.28, ease: [0.2, 0.7, 0.2, 1] }}
+            >
+              <Outlet />
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
     </div>

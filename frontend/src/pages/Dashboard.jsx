@@ -8,19 +8,22 @@ import { Package, FileText, AlarmClock, Wallet, ArrowRight } from 'lucide-react'
 import api from '../api/client.js';
 import Spinner from '../components/Spinner.jsx';
 import PageHeader from '../components/PageHeader.jsx';
+import CountUp from '../components/CountUp.jsx';
 import { currency, formatDate, daysUntil } from '../utils/format.js';
 
 // Colourful (non-monotonous) palette for the chart + rotating tiles.
 const COLORS = ['#2f6bff', '#7c3aed', '#ec4899', '#f97316', '#22c55e', '#06b6d4', '#eab308', '#f43f5e', '#14b8a6'];
 const TILES = ['tile-blue', 'tile-purple', 'tile-pink', 'tile-green', 'tile-orange', 'tile-cyan', 'tile-indigo', 'tile-red'];
 
-function StatCard({ label, value, Icon, tile }) {
+function StatCard({ label, value, Icon, tile, format }) {
   return (
     <div className="card p-5">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-500">{label}</p>
-          <p className="mt-1 truncate font-display text-2xl font-bold text-ink-900">{value}</p>
+          <p className="mt-1 truncate font-display text-2xl font-bold text-ink-900">
+            <CountUp value={value} format={format} />
+          </p>
         </div>
         <span className={`icon-tile ${tile} h-12 w-12 shrink-0`}>
           <Icon size={20} strokeWidth={2} />
@@ -57,7 +60,7 @@ export default function Dashboard() {
         <StatCard label="Products" value={stats.productCount} Icon={Package} tile="tile-blue" />
         <StatCard label="Documents" value={stats.documentCount} Icon={FileText} tile="tile-purple" />
         <StatCard label="Expiring (30d)" value={stats.expiringCount} Icon={AlarmClock} tile="tile-orange" />
-        <StatCard label="Total Value" value={currency(stats.totalValue)} Icon={Wallet} tile="tile-green" />
+        <StatCard label="Total Value" value={stats.totalValue} format={currency} Icon={Wallet} tile="tile-green" />
       </div>
 
       {/* Hero + category */}
@@ -89,7 +92,7 @@ export default function Dashboard() {
           ) : (
             <ResponsiveContainer width="100%" height={230}>
               <PieChart>
-                <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={85} paddingAngle={3} stroke="none">
+                <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={85} paddingAngle={3} stroke="none" isAnimationActive animationDuration={1100} animationBegin={150}>
                   {pieData.map((entry, i) => (
                     <Cell key={entry.name} fill={COLORS[i % COLORS.length]} />
                   ))}

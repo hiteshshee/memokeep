@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import api from '../api/client.js';
 import Spinner from '../components/Spinner.jsx';
+import { toast } from '../components/Toast.jsx';
 import { CATEGORIES } from '../utils/format.js';
 
 const empty = {
@@ -53,13 +54,16 @@ export default function ProductForm() {
     try {
       if (editing) {
         await api.put(`/products/${id}`, payload);
+        toast('Changes saved');
         navigate(`/products/${id}`);
       } else {
         const { data } = await api.post('/products', payload);
+        toast('Product created');
         navigate(`/products/${data.product._id}`);
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Save failed');
+      toast(err.response?.data?.message || 'Save failed', 'error');
       setSaving(false);
     }
   };

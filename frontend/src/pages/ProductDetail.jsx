@@ -5,6 +5,8 @@ import {
 } from 'lucide-react';
 import api from '../api/client.js';
 import Spinner from '../components/Spinner.jsx';
+import ProgressBar from '../components/ProgressBar.jsx';
+import { toast } from '../components/Toast.jsx';
 import { currency, formatDate, daysUntil, DOC_TYPES } from '../utils/format.js';
 
 const TYPE_ICON = {
@@ -47,8 +49,9 @@ export default function ProductDetail() {
     try {
       await api.post('/documents', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
       await load();
+      toast('Document uploaded');
     } catch (err) {
-      alert(err.response?.data?.message || 'Upload failed');
+      toast(err.response?.data?.message || 'Upload failed', 'error');
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = '';
@@ -59,11 +62,13 @@ export default function ProductDetail() {
     if (!confirm('Delete this document?')) return;
     await api.delete(`/documents/${docId}`);
     setDocuments((d) => d.filter((x) => x._id !== docId));
+    toast('Document removed');
   };
 
   const deleteProduct = async () => {
     if (!confirm('Delete this product and all its documents?')) return;
     await api.delete(`/products/${id}`);
+    toast('Product deleted');
     navigate('/products');
   };
 
@@ -72,6 +77,16 @@ export default function ProductDetail() {
 
   const warrantyDays = daysUntil(product.warrantyExpiry);
   const docUrl = (d) => (d.storage === 'local' ? d.url : d.url);
+
+  // How much of the warranty period has elapsed (0–100%).
+  const warrantyPct = (() => {
+    if (!product.purchaseDate || !product.warrantyExpiry) return 0;
+    const start = new Date(product.purchaseDate).getTime();
+    const end = new Date(product.warrantyExpiry).getTime();
+    if (end <= start) return 0;
+    return ((Date.now() - start) / (end - start)) * 100;
+  })();
+  const warrantyTone = warrantyDays < 0 ? 'red' : warrantyDays <= 30 ? 'amber' : 'green';
 
   const Row = ({ label, value }) =>
     value ? (
@@ -128,6 +143,16 @@ export default function ProductDetail() {
               {warrantyDays < 0
                 ? `Warranty expired ${formatDate(product.warrantyExpiry)}`
                 : `Warranty valid until ${formatDate(product.warrantyExpiry)} (${warrantyDays}d)`}
+            </div>
+          )}
+
+          {product.warrantyExpiry && product.purchaseDate && (
+            <div className="mt-4 max-w-xs">
+              <div className="mb-1.5 flex items-center justify-between text-xs text-ink-500">
+                <span>Warranty used</span>
+                <span>{warrantyDays < 0 ? 'Expired' : `${warrantyDays} days left`}</span>
+              </div>
+              <ProgressBar value={warrantyPct} tone={warrantyTone} />
             </div>
           )}
 

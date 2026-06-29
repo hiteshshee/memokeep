@@ -241,6 +241,14 @@ h3,
     background: #fff1f2;
     transform: translateY(-1px);
   }
+  /* Tap feedback — buttons press in on click */
+  .btn-primary:active,
+  .btn-gold:active,
+  .btn-ghost:active,
+  .btn-danger:active {
+    transform: scale(0.96);
+    transition-duration: 0.08s;
+  }
 
   /* ---------- Accents ---------- */
   .link-gold {
