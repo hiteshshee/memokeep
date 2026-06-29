@@ -8,6 +8,8 @@ import { Package, FolderLock, CreditCard, AlarmClock, Wallet, ArrowRight } from 
 import api from '../api/client.js';
 import PageHeader from '../components/PageHeader.jsx';
 import CountUp from '../components/CountUp.jsx';
+import Magnetic from '../components/Magnetic.jsx';
+import Reveal from '../components/Reveal.jsx';
 import { DashboardSkeleton } from '../components/Skeleton.jsx';
 import { currency, formatDate, daysUntil } from '../utils/format.js';
 
@@ -73,10 +75,7 @@ export default function Dashboard() {
       {/* Hero + category */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Welcome hero — soft light gradient with colour accents */}
-        <div
-          className="card relative overflow-hidden p-8 lg:col-span-2"
-          style={{ background: 'linear-gradient(120deg, #eaf1ff, #eef0ff 50%, #f4ecff)' }}
-        >
+        <div className="hero-grad card relative overflow-hidden p-8 lg:col-span-2">
           <div className="pointer-events-none absolute -right-8 -top-10 h-56 w-56 rounded-full bg-gradient-to-br from-blue-400/35 to-violet-400/35 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-14 right-1/3 h-44 w-44 rounded-full bg-pink-300/30 blur-3xl" />
           <div className="relative z-10 max-w-md">
@@ -85,9 +84,11 @@ export default function Dashboard() {
             <p className="mt-3 text-sm leading-relaxed text-ink-600">
               Glad to see you again. Everything you own is safe, searchable and beautifully organised.
             </p>
-            <Link to="/products" className="btn-primary mt-7">
-              Browse your collection <ArrowRight size={16} strokeWidth={2.25} />
-            </Link>
+            <Magnetic className="mt-7" strength={0.25}>
+              <Link to="/products" className="btn-primary">
+                Browse your collection <ArrowRight size={16} strokeWidth={2.25} />
+              </Link>
+            </Magnetic>
           </div>
         </div>
 
@@ -115,7 +116,7 @@ export default function Dashboard() {
       </div>
 
       {/* Recent + expiring */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <Reveal className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Recently added */}
         <div className="card p-6 lg:col-span-2">
           <div className="mb-5 flex items-center justify-between">
@@ -190,11 +191,12 @@ export default function Dashboard() {
             </ul>
           )}
         </div>
-      </div>
+      </Reveal>
 
       {/* Warranties expiring soon */}
-      <div className="card p-6">
-        <h2 className="mb-4 text-lg font-semibold text-ink-900">Warranties expiring soon</h2>
+      <Reveal>
+        <div className="card p-6">
+          <h2 className="mb-4 text-lg font-semibold text-ink-900">Warranties expiring soon</h2>
         {expiringWarranties.length === 0 ? (
           <p className="text-sm text-ink-400">No warranties expiring in the next 30 days. 🎉</p>
         ) : (
@@ -219,7 +221,8 @@ export default function Dashboard() {
             })}
           </ul>
         )}
-      </div>
+        </div>
+      </Reveal>
     </div>
   );
 }

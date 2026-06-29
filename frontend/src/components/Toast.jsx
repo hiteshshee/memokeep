@@ -45,7 +45,8 @@ export function Toaster() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, x: 40, scale: 0.9 }}
               transition={{ type: 'spring', stiffness: 380, damping: 28 }}
-              className={`pointer-events-auto flex items-center gap-2.5 rounded-xl border bg-white px-4 py-3 text-sm shadow-[0_12px_34px_-12px_rgba(20,30,80,0.35)] ${TONES[t.type] || TONES.info}`}
+              style={{ background: 'var(--surface-solid)' }}
+              className={`pointer-events-auto flex items-center gap-2.5 rounded-xl border px-4 py-3 text-sm shadow-[0_12px_34px_-12px_rgba(20,30,80,0.35)] backdrop-blur ${TONES[t.type] || TONES.info}`}
             >
               <Icon size={18} />
               <span className="font-medium text-ink-800">{t.message}</span>

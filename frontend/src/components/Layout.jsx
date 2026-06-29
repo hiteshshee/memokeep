@@ -4,9 +4,11 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   LayoutDashboard, Package, PlusCircle, LogOut, Sparkles, FolderLock, CreditCard,
-  Smartphone, Laptop, Tv, Refrigerator, Settings as SettingsIcon, Menu, X,
+  Smartphone, Laptop, Tv, Refrigerator, Settings as SettingsIcon, Menu, X, Plus,
 } from 'lucide-react';
 import { logout } from '../store/authSlice.js';
+import ThemeToggle from './ThemeToggle.jsx';
+import Magnetic from './Magnetic.jsx';
 
 const links = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -134,7 +136,7 @@ export default function Layout() {
         {mobileOpen && (
           <>
             <motion.div
-              className="fixed inset-0 z-40 bg-ink-900/40 backdrop-blur-sm md:hidden"
+              className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setMobileOpen(false)}
             />
@@ -169,6 +171,7 @@ export default function Layout() {
             <span className="hidden text-sm text-ink-500 sm:inline">
               Hi, <span className="font-medium text-ink-800">{user?.name?.split(' ')[0]}</span>
             </span>
+            <ThemeToggle />
             <Link
               to="/settings"
               title="Settings"
@@ -199,6 +202,19 @@ export default function Layout() {
           </AnimatePresence>
         </main>
       </div>
+
+      {/* Floating action button */}
+      <Magnetic className="fixed bottom-6 right-6 z-30" strength={0.4}>
+        <Link
+          to="/products/new"
+          aria-label="Add product"
+          title="Add product"
+          className="flex h-14 w-14 items-center justify-center rounded-2xl text-white shadow-[0_14px_34px_-10px_rgba(47,107,255,0.7)] transition hover:brightness-110"
+          style={{ background: 'linear-gradient(135deg, #2f6bff, #7c3aed)' }}
+        >
+          <Plus size={24} strokeWidth={2.5} />
+        </Link>
+      </Magnetic>
     </div>
   );
 }

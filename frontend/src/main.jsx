@@ -6,6 +6,12 @@ import { store } from './store/index.js';
 import App from './App.jsx';
 import './index.css';
 
+// Apply the saved theme before first paint (defaults to dark for the premium look).
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+  document.documentElement.classList.add('dark');
+}
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <Provider store={store}>
