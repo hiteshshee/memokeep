@@ -49,8 +49,8 @@ function reminderEmailHtml(name, items, appUrl) {
       (it) => `
       <tr>
         <td style="padding:12px 0;border-bottom:1px solid #e7ecf5">
-          <div style="font-weight:600;color:#10193b">${it.name}</div>
-          <div style="font-size:13px;color:#8a94ad">${it.brand || it.category || ''}</div>
+          <div style="font-weight:600;color:#10193b">${it.title}</div>
+          <div style="font-size:13px;color:#8a94ad">${it.sub || ''}</div>
         </td>
         <td style="padding:12px 0;border-bottom:1px solid #e7ecf5;text-align:right;white-space:nowrap">
           <span style="display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700;${
@@ -65,10 +65,10 @@ function reminderEmailHtml(name, items, appUrl) {
   return `
   <div style="font-family:Inter,Segoe UI,Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px;background:#f4f7fe;border-radius:16px;color:#10193b">
     <p style="font-weight:700;letter-spacing:.2em;color:#2f6bff;margin:0 0 24px">MEMOKEEP</p>
-    <h1 style="font-size:22px;margin:0 0 8px">⏰ Warranties expiring soon</h1>
+    <h1 style="font-size:22px;margin:0 0 8px">⏰ Expiring soon</h1>
     <p style="color:#5b6788;margin:0 0 20px">Hi ${name || 'there'}, a heads-up that ${
-      items.length === 1 ? 'one of your products is' : `${items.length} of your products are`
-    } about to go out of warranty:</p>
+      items.length === 1 ? 'one item is' : `${items.length} items are`
+    } about to expire:</p>
     <table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid #e7ecf5;border-radius:12px;padding:8px 16px">
       ${rows}
     </table>
@@ -79,11 +79,12 @@ function reminderEmailHtml(name, items, appUrl) {
   </div>`;
 }
 
-// Send a digest of the user's soon-to-expire warranties.
-export async function sendWarrantyReminderEmail(to, name, items, appUrl) {
-  const list = items.map((i) => `${i.name} — ${i.daysLeft <= 0 ? 'expires today' : `${i.daysLeft} days left`}`).join('\n');
+// Send a digest of the user's soon-to-expire items (warranties, documents,
+// subscriptions). Each item: { title, sub, daysLeft, expiryStr }.
+export async function sendReminderEmail(to, name, items, appUrl) {
+  const list = items.map((i) => `${i.title} — ${i.daysLeft <= 0 ? 'expires today' : `${i.daysLeft} days left`}`).join('\n');
   if (!transporter) {
-    console.log(`\n📧 [DEV] Warranty reminder for ${to}:\n${list}\n`);
+    console.log(`\n📧 [DEV] Reminder for ${to}:\n${list}\n`);
     return true;
   }
   await transporter.sendMail({
@@ -91,10 +92,10 @@ export async function sendWarrantyReminderEmail(to, name, items, appUrl) {
     to,
     subject:
       items.length === 1
-        ? `⏰ ${items[0].name} warranty expires soon`
-        : `⏰ ${items.length} warranties expiring soon`,
+        ? `⏰ ${items[0].title} expires soon`
+        : `⏰ ${items.length} items expiring soon`,
     html: reminderEmailHtml(name, items, appUrl),
-    text: `Warranties expiring soon:\n${list}\n\nOpen MemoKeep: ${appUrl}`,
+    text: `Expiring soon:\n${list}\n\nOpen MemoKeep: ${appUrl}`,
   });
   return true;
 }

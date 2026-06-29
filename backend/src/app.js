@@ -11,6 +11,7 @@ import authRoutes from './routes/auth.routes.js';
 import productRoutes from './routes/product.routes.js';
 import documentRoutes from './routes/document.routes.js';
 import dashboardRoutes from './routes/dashboard.routes.js';
+import vaultRoutes from './routes/vault.routes.js';
 import cronRoutes from './routes/cron.routes.js';
 
 const app = express();
@@ -53,6 +54,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/vault', vaultRoutes);
 app.use('/api/cron', cronRoutes);
 
 app.use(notFound);
