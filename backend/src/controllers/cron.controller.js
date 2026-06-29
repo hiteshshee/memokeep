@@ -1,5 +1,6 @@
 import Product from '../models/Product.js';
 import Vault from '../models/Vault.js';
+import Subscription from '../models/Subscription.js';
 import env from '../config/env.js';
 import { sendReminderEmail } from '../config/mailer.js';
 import { asyncHandler, ApiError } from '../utils/asyncHandler.js';
@@ -9,6 +10,19 @@ const fmtDate = (d) =>
   new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 const daysLeft = (d) => Math.ceil((new Date(d).getTime() - Date.now()) / DAY);
 const eligible = (owner) => owner && owner.isVerified && owner.email && !owner.reminderOptOut;
+
+// Advance a renewal date by one billing cycle.
+const CYCLE = {
+  weekly: (d) => d.setDate(d.getDate() + 7),
+  monthly: (d) => d.setMonth(d.getMonth() + 1),
+  quarterly: (d) => d.setMonth(d.getMonth() + 3),
+  yearly: (d) => d.setFullYear(d.getFullYear() + 1),
+};
+function advance(date, cycle) {
+  const d = new Date(date);
+  (CYCLE[cycle] || CYCLE.monthly)(d);
+  return d;
+}
 
 // GET /api/cron/warranty-reminders
 // Daily (Vercel Cron). Emails each owner ONE digest of everything expiring within
@@ -29,7 +43,9 @@ export const warrantyReminders = asyncHandler(async (req, res) => {
   const buckets = new Map();
   const bucketFor = (owner) => {
     const key = owner._id.toString();
-    if (!buckets.has(key)) buckets.set(key, { user: owner, items: [], marks: { Product: [], Vault: [] } });
+    if (!buckets.has(key)) {
+      buckets.set(key, { user: owner, items: [], marks: { Product: [], Vault: [], Subscription: [] } });
+    }
     return buckets.get(key);
   };
 
@@ -65,6 +81,31 @@ export const warrantyReminders = asyncHandler(async (req, res) => {
     b.marks.Vault.push(d._id);
   }
 
+  // 3) Subscriptions — roll past-due renewals forward by their cycle, then
+  //    remind on upcoming renewals.
+  const subs = await Subscription.find({ isActive: true, nextRenewal: { $ne: null } })
+    .populate('owner', 'name email isVerified reminderOptOut');
+  for (const s of subs) {
+    if (!s.nextRenewal) continue;
+    if (s.nextRenewal.getTime() < now.getTime()) {
+      let nr = s.nextRenewal;
+      while (nr.getTime() <= now.getTime()) nr = advance(nr, s.billingCycle);
+      s.nextRenewal = nr; // pre-save resets reminderSentAt
+      // eslint-disable-next-line no-await-in-loop
+      await s.save();
+    }
+    if (!eligible(s.owner) || s.reminderSentAt) continue;
+    if (s.nextRenewal.getTime() < now.getTime() || s.nextRenewal.getTime() > until.getTime()) continue;
+    const b = bucketFor(s.owner);
+    b.items.push({
+      title: s.name,
+      sub: `Subscription · ${s.currency === 'INR' ? '₹' : ''}${s.amount}/${s.billingCycle}`,
+      daysLeft: daysLeft(s.nextRenewal),
+      expiryStr: fmtDate(s.nextRenewal),
+    });
+    b.marks.Subscription.push(s._id);
+  }
+
   let usersNotified = 0;
   let itemsReminded = 0;
   for (const b of buckets.values()) {
@@ -79,6 +120,10 @@ export const warrantyReminders = asyncHandler(async (req, res) => {
       if (b.marks.Vault.length) {
         // eslint-disable-next-line no-await-in-loop
         await Vault.updateMany({ _id: { $in: b.marks.Vault } }, { $set: { reminderSentAt: new Date() } });
+      }
+      if (b.marks.Subscription.length) {
+        // eslint-disable-next-line no-await-in-loop
+        await Subscription.updateMany({ _id: { $in: b.marks.Subscription } }, { $set: { reminderSentAt: new Date() } });
       }
       usersNotified += 1;
       itemsReminded += b.items.length;

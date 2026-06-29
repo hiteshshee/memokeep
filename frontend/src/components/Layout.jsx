@@ -2,7 +2,7 @@ import { NavLink, Link, Outlet, useNavigate, useLocation } from 'react-router-do
 import { AnimatePresence, motion } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  LayoutDashboard, Package, PlusCircle, LogOut, Sparkles, FolderLock,
+  LayoutDashboard, Package, PlusCircle, LogOut, Sparkles, FolderLock, CreditCard,
   Smartphone, Laptop, Tv, Refrigerator, Settings as SettingsIcon,
 } from 'lucide-react';
 import { logout } from '../store/authSlice.js';
@@ -11,6 +11,7 @@ const links = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/products', label: 'Products', icon: Package },
   { to: '/vault', label: 'Documents', icon: FolderLock },
+  { to: '/subscriptions', label: 'Subscriptions', icon: CreditCard },
   { to: '/products/new', label: 'Add Product', icon: PlusCircle },
 ];
 

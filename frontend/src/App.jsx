@@ -17,6 +17,7 @@ import Products from './pages/Products.jsx';
 import ProductForm from './pages/ProductForm.jsx';
 import ProductDetail from './pages/ProductDetail.jsx';
 import Vault from './pages/Vault.jsx';
+import Subscriptions from './pages/Subscriptions.jsx';
 import Settings from './pages/Settings.jsx';
 import NotFound from './pages/NotFound.jsx';
 
@@ -47,6 +48,7 @@ export default function App() {
           <Route path="/products/:id" element={<ProductDetail />} />
           <Route path="/products/:id/edit" element={<ProductForm />} />
           <Route path="/vault" element={<Vault />} />
+          <Route path="/subscriptions" element={<Subscriptions />} />
           <Route path="/settings" element={<Settings />} />
         </Route>
       </Route>
