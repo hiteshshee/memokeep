@@ -55,43 +55,73 @@ export function parseDate(text) {
 }
 
 // --- Price --------------------------------------------------------------
-// Pull money-like amounts from a line, ignoring obvious non-prices.
+// Lines that never hold a product price (tax IDs, contact info, doc numbers).
+const SKIP_LINE =
+  /gst|gstin|tin|vat|hsn|sac|\bpan\b|phone|\bph\b|tel|mobile|contact|invoice\s*no|bill\s*no|order\s*(no|id)|receipt\s*no|reg\.?\s*no|\bcin\b|fssai|pin\s*code|account|ifsc|\bupi\b|card\s*no/i;
+
+// Lines that talk about counts, not money.
+const QTY_LINE = /\b(qty|quantity|items?|pcs|nos|units?)\b/i;
+
+// How strongly a line's wording suggests it holds the final amount.
+function labelScore(low) {
+  if (/grand\s*total|amount\s*(payable|due)|total\s*payable|net\s*(payable|amount|total)|balance\s*due/.test(low)) return 5;
+  if (/\btotal\b/.test(low) && !/sub\s*-?\s*total/.test(low)) return 4;
+  if (/sub\s*-?\s*total/.test(low)) return 2;
+  if (/\bamount\b|\bpaid\b|\bmrp\b|\bprice\b|\bcost\b|\bnet\b/.test(low)) return 2;
+  return 0;
+}
+
+// Pull amounts from one line, flagging whether a currency symbol preceded each
+// number (a strong signal it's really money, not an ID/quantity/year).
 function amountsIn(line) {
   const out = [];
-  const re = /(?:₹|rs\.?|inr|\$)?\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)/gi;
+  const re = /(₹|rs\.?|inr|\$)?\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)/gi;
   let m;
   while ((m = re.exec(line))) {
-    const raw = m[1];
+    const sym = m[1];
+    const raw = m[2];
+    const grouped = raw.includes('.') || raw.includes(',');
     const digits = raw.replace(/[,.]/g, '');
-    // Skip long digit runs without separators (phone / GST / invoice numbers).
-    if (digits.length >= 7 && !raw.includes('.') && !raw.includes(',')) continue;
+    // Skip long digit runs without separators (phone / GST / doc numbers).
+    if (digits.length >= 7 && !grouped) continue;
     const n = parseFloat(raw.replace(/,/g, ''));
-    if (!Number.isNaN(n) && n >= 1 && n <= 1_000_000) out.push(n);
+    if (Number.isNaN(n) || n < 1 || n > 5_000_000) continue;
+    const hasCurrency = Boolean(sym);
+    const looksLikeYear = !hasCurrency && !grouped && n >= 1990 && n <= 2099;
+    out.push({ value: n, hasCurrency, looksLikeYear });
   }
   return out;
 }
 
-const SKIP_LINE = /gst|tin|vat|hsn|phone|\bph\b|tel|mobile|invoice\s*no|bill\s*no|order\s*no|receipt\s*no/i;
-
 export function parsePrice(linesArr) {
-  let best = null; // { score, value }
-  for (const line of linesArr) {
-    if (SKIP_LINE.test(line)) continue;
-    const low = line.toLowerCase();
-    let score = 0;
-    if (/grand\s*total|amount\s*payable|net\s*(payable|amount)/.test(low)) score = 4;
-    else if (/\btotal\b/.test(low) && !/sub\s*total/.test(low)) score = 3;
-    else if (/amount|paid|\bmrp\b|price/.test(low)) score = 2;
-    else if (/sub\s*total/.test(low)) score = 1;
+  // Per-line info, so an amount can inherit a label from the line above it
+  // (column layouts often OCR "TOTAL" and its value as two separate lines).
+  const meta = linesArr.map((line) => {
+    const skip = SKIP_LINE.test(line) || QTY_LINE.test(line);
+    const score = labelScore(line.toLowerCase());
+    const amounts = skip ? [] : amountsIn(line);
+    return { score, amounts, isPureLabel: score > 0 && amounts.length === 0 };
+  });
 
-    const amts = amountsIn(line);
-    if (!amts.length) continue;
-    const value = Math.max(...amts);
-    if (!best || score > best.score || (score === best.score && value > best.value)) {
-      best = { score, value };
+  const candidates = [];
+  meta.forEach((mm, i) => {
+    for (const a of mm.amounts) {
+      let score = mm.score;
+      if (score === 0 && i > 0 && meta[i - 1].isPureLabel) score = meta[i - 1].score;
+      if (a.looksLikeYear && score === 0) continue; // drop stray years
+      candidates.push({ value: a.value, hasCurrency: a.hasCurrency, score });
     }
-  }
-  return best ? Math.round(best.value) : '';
+  });
+
+  if (!candidates.length) return '';
+
+  // Labelled "total" lines win; then amounts with a ₹/Rs/$ symbol; then the
+  // largest value (the grand total is the biggest of the total-ish numbers).
+  candidates.sort((a, b) =>
+    b.score - a.score || b.hasCurrency - a.hasCurrency || b.value - a.value,
+  );
+
+  return Math.round(candidates[0].value);
 }
 
 // --- Warranty (returns months) -----------------------------------------
