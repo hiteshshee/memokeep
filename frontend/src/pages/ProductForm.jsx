@@ -3,6 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import api from '../api/client.js';
 import Spinner from '../components/Spinner.jsx';
 import { toast } from '../components/Toast.jsx';
+import ReceiptScanner from '../components/ReceiptScanner.jsx';
 import { CATEGORIES } from '../utils/format.js';
 
 const empty = {
@@ -40,6 +41,18 @@ export default function ProductForm() {
   }, [id, editing]);
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+
+  // Merge best-effort fields from a scanned receipt, only overwriting where
+  // the scan actually found something — never wiping what the user typed.
+  const applyScan = (fields) => {
+    setForm((f) => {
+      const next = { ...f };
+      for (const [k, v] of Object.entries(fields)) {
+        if (v !== '' && v != null) next[k] = v;
+      }
+      return next;
+    });
+  };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -87,6 +100,8 @@ export default function ProductForm() {
       )}
 
       <form onSubmit={submit} className="card space-y-5 p-6">
+        {!editing && <ReceiptScanner onParsed={applyScan} />}
+
         <div>
           <label className="label">Product name *</label>
           <input required value={form.name} onChange={set('name')} className="input" placeholder="e.g. Samsung Refrigerator" />
