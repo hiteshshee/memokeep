@@ -38,7 +38,7 @@ export default function Register() {
         <div className="reveal w-full max-w-sm">
           <div className="mb-8 text-center">
             <p className="font-display text-2xl font-bold tracking-[0.2em]">
-              <span className="gradient-text">MEMOKEEP</span>
+              <span className="gradient-text">MemoKeep</span>
             </p>
             <div className="mx-auto mt-3 rule-gold" />
             <h1 className="mt-6 text-3xl font-bold text-ink-900">

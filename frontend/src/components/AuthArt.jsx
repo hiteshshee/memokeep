@@ -22,7 +22,7 @@ export default function AuthArt() {
 
       <div className="relative flex h-full flex-col justify-between p-14">
         <p className="font-display text-xl font-bold tracking-[0.28em]">
-          <span className="gradient-text">MEMOKEEP</span>
+          <span className="gradient-text">MemoKeep</span>
         </p>
 
         <div>

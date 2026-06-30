@@ -32,7 +32,7 @@ function SidebarContent({ onLogout, onNavigate }) {
     <>
       <div className="mb-1 px-2">
         <span className="font-display text-xl font-bold tracking-[0.18em]">
-          <span className="gradient-text">MEMOKEEP</span>
+          <span className="gradient-text">MemoKeep</span>
         </span>
       </div>
       <div className="mb-8 ml-2 rule-gold" />
@@ -165,7 +165,7 @@ export default function Layout() {
             <Menu size={18} strokeWidth={2} />
           </button>
           <div className="font-display text-lg font-bold tracking-[0.16em] md:hidden">
-            <span className="gradient-text">MEMOKEEP</span>
+            <span className="gradient-text">MemoKeep</span>
           </div>
           <div className="ml-auto flex items-center gap-3">
             <span className="hidden text-sm text-ink-500 sm:inline">
