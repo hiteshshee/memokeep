@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import crypto from 'node:crypto';
 import User from '../models/User.js';
 import env from '../config/env.js';
-import { sendOtpEmail } from '../config/mailer.js';
+import { sendOtpEmail, sendResetOtpEmail } from '../config/mailer.js';
 import { asyncHandler, ApiError } from '../utils/asyncHandler.js';
 import {
   signAccessToken,
@@ -237,4 +237,55 @@ export const changePassword = asyncHandler(async (req, res) => {
   user.password = newPassword; // re-hashed by the model's pre-save hook
   await user.save();
   res.json({ message: 'Password updated successfully' });
+});
+
+// Password reset, step 1: email a reset code. Responds generically whether or
+// not the account exists, so this can't be used to discover registered emails.
+export const forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  if (!email) throw new ApiError(400, 'Email is required');
+  const normalized = email.toLowerCase().trim();
+
+  const user = await User.findOne({ email: normalized }).select('+otpHash +otpExpires +otpAttempts');
+  const generic = { message: 'If an account exists for that email, a reset code is on its way.' };
+
+  // Only verified accounts can reset — but respond the same either way.
+  if (!user || !user.isVerified) return res.json(generic);
+
+  const otp = await assignOtp(user);
+  await user.save();
+  await sendResetOtpEmail(normalized, user.name, otp);
+  res.json({ ...generic, ...devOtpField(otp) });
+});
+
+// Password reset, step 2: verify the code, set the new password, revoke every
+// existing session, and log the user straight in.
+export const resetPassword = asyncHandler(async (req, res) => {
+  const { email, otp, password } = req.body;
+  if (!email || !otp || !password) throw new ApiError(400, 'Email, code and new password are required');
+  if (password.length < 6) throw new ApiError(400, 'Password must be at least 6 characters');
+  const normalized = email.toLowerCase().trim();
+
+  const user = await User.findOne({ email: normalized }).select(
+    '+password +otpHash +otpExpires +otpAttempts +refreshTokens'
+  );
+  if (!user || !user.isVerified) throw new ApiError(400, 'Invalid or expired code');
+  if (!user.otpHash || !user.otpExpires) throw new ApiError(400, 'No reset pending — request a new code');
+  if (user.otpExpires.getTime() < Date.now()) throw new ApiError(400, 'Code expired — request a new one');
+  if (user.otpAttempts >= MAX_OTP_ATTEMPTS) throw new ApiError(429, 'Too many attempts — request a new code');
+
+  const ok = await bcrypt.compare(String(otp).trim(), user.otpHash);
+  if (!ok) {
+    user.otpAttempts += 1;
+    await user.save();
+    throw new ApiError(400, 'Incorrect code');
+  }
+
+  user.password = password; // re-hashed by the model's pre-save hook
+  user.otpHash = null;
+  user.otpExpires = null;
+  user.otpAttempts = 0;
+  user.refreshTokens = []; // a password reset signs out every other device
+  const accessToken = await issueTokens(user, res); // persists changes + new refresh cookie
+  res.json({ user, accessToken });
 });

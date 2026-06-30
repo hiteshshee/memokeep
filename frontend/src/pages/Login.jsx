@@ -69,6 +69,11 @@ export default function Login() {
                 className="input"
                 placeholder="••••••••"
               />
+              <div className="mt-2 flex justify-end">
+                <Link to="/forgot-password" className="link-gold text-sm">
+                  Forgot password?
+                </Link>
+              </div>
             </div>
             <button type="submit" disabled={status === 'loading'} className="btn-primary w-full">
               {status === 'loading' ? 'Signing in…' : 'Sign In'}

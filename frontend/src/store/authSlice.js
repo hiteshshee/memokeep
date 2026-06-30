@@ -31,6 +31,27 @@ export const resendOtp = createAsyncThunk('auth/resendOtp', async (email, { reje
   }
 });
 
+// Password reset, step 1: ask the backend to email a reset code.
+export const forgotPassword = createAsyncThunk('auth/forgotPassword', async (email, { rejectWithValue }) => {
+  try {
+    const { data } = await api.post('/auth/forgot-password', { email });
+    return data; // { message, devOtp? }
+  } catch (err) {
+    return rejectWithValue(err.response?.data?.message || 'Could not send reset code');
+  }
+});
+
+// Password reset, step 2: verify the code + new password — on success, logged in.
+export const resetPassword = createAsyncThunk('auth/resetPassword', async (payload, { rejectWithValue }) => {
+  try {
+    const { data } = await api.post('/auth/reset-password', payload);
+    setAccessToken(data.accessToken);
+    return data.user;
+  } catch (err) {
+    return rejectWithValue(err.response?.data?.message || 'Password reset failed');
+  }
+});
+
 export const login = createAsyncThunk('auth/login', async (payload, { rejectWithValue }) => {
   try {
     const { data } = await api.post('/auth/login', payload);
@@ -160,6 +181,16 @@ const authSlice = createSlice({
           state.error = action.payload;
         }
       })
+      // Password reset verified → logged straight in
+      .addCase(resetPassword.pending, pending)
+      .addCase(resetPassword.fulfilled, (state, action) => {
+        state.status = 'authenticated';
+        state.user = action.payload;
+        state.awaitingOtp = false;
+        state.pendingEmail = null;
+        state.devOtp = null;
+      })
+      .addCase(resetPassword.rejected, rejected)
       .addCase(updateProfile.fulfilled, (state, action) => {
         state.user = action.payload;
       })

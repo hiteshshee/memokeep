@@ -43,6 +43,35 @@ export async function sendOtpEmail(to, name, otp) {
   return true;
 }
 
+function resetEmailHtml(name, otp) {
+  return `
+  <div style="font-family:Inter,Segoe UI,Arial,sans-serif;max-width:480px;margin:0 auto;padding:32px;background:#f4f7fe;border-radius:16px;color:#10193b">
+    <p style="font-weight:700;letter-spacing:.2em;color:#2f6bff;margin:0 0 24px">MEMOKEEP</p>
+    <h1 style="font-size:22px;margin:0 0 8px">Reset your password</h1>
+    <p style="color:#5b6788;margin:0 0 24px">Hi ${name || 'there'}, use this code to set a new password for your MemoKeep account.</p>
+    <div style="background:#fff;border:1px solid #e7ecf5;border-radius:12px;padding:20px;text-align:center;margin-bottom:24px">
+      <div style="font-size:34px;font-weight:700;letter-spacing:.4em;color:#2f6bff">${otp}</div>
+    </div>
+    <p style="color:#8a94ad;font-size:13px;margin:0">This code expires in 10 minutes. If you didn't request a reset, you can safely ignore this email — your password won't change.</p>
+  </div>`;
+}
+
+// Send a password-reset one-time passcode. Same dev fallback as sendOtpEmail.
+export async function sendResetOtpEmail(to, name, otp) {
+  if (!transporter) {
+    console.log(`\n📧 [DEV] Password reset OTP for ${to}: ${otp}  (expires in 10 min)\n`);
+    return true;
+  }
+  await transporter.sendMail({
+    from: env.email.from,
+    to,
+    subject: `${otp} is your MemoKeep password reset code`,
+    html: resetEmailHtml(name, otp),
+    text: `Your MemoKeep password reset code is ${otp}. It expires in 10 minutes. If you didn't request this, you can ignore this email.`,
+  });
+  return true;
+}
+
 function reminderEmailHtml(name, items, appUrl) {
   const rows = items
     .map(
