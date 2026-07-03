@@ -20,6 +20,7 @@ import ProductDetail from './pages/ProductDetail.jsx';
 import Vault from './pages/Vault.jsx';
 import Subscriptions from './pages/Subscriptions.jsx';
 import Settings from './pages/Settings.jsx';
+import Admin from './pages/Admin.jsx';
 import NotFound from './pages/NotFound.jsx';
 
 export default function App() {
@@ -52,6 +53,7 @@ export default function App() {
           <Route path="/vault" element={<Vault />} />
           <Route path="/subscriptions" element={<Subscriptions />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/admin" element={<Admin />} />
         </Route>
       </Route>
 

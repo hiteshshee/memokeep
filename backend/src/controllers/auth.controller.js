@@ -105,6 +105,7 @@ export const verifyOtp = asyncHandler(async (req, res) => {
   user.otpHash = null;
   user.otpExpires = null;
   user.otpAttempts = 0;
+  user.lastLoginAt = new Date();
   const accessToken = await issueTokens(user, res); // persists the changes
   res.status(201).json({ user, accessToken });
 });
@@ -150,7 +151,8 @@ export const login = asyncHandler(async (req, res) => {
     });
   }
 
-  const accessToken = await issueTokens(user, res);
+  user.lastLoginAt = new Date();
+  const accessToken = await issueTokens(user, res); // persists lastLoginAt too
   return res.json({ user, accessToken });
 });
 

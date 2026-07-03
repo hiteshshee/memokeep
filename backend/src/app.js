@@ -14,6 +14,7 @@ import dashboardRoutes from './routes/dashboard.routes.js';
 import vaultRoutes from './routes/vault.routes.js';
 import subscriptionRoutes from './routes/subscription.routes.js';
 import cronRoutes from './routes/cron.routes.js';
+import adminRoutes from './routes/admin.routes.js';
 
 const app = express();
 
@@ -58,6 +59,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/vault', vaultRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
 app.use('/api/cron', cronRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

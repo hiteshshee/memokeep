@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   LayoutDashboard, Package, PlusCircle, LogOut, Sparkles, FolderLock, CreditCard,
-  Smartphone, Laptop, Tv, Refrigerator, Settings as SettingsIcon, Menu, X, Plus,
+  Smartphone, Laptop, Tv, Refrigerator, Settings as SettingsIcon, Menu, X, Plus, Shield,
 } from 'lucide-react';
 import { logout } from '../store/authSlice.js';
 import ThemeToggle from './ThemeToggle.jsx';
@@ -27,7 +27,7 @@ const categoryNav = [
 ];
 
 // Sidebar contents, shared by the desktop rail and the mobile drawer.
-function SidebarContent({ onLogout, onNavigate }) {
+function SidebarContent({ onLogout, onNavigate, isAdmin }) {
   return (
     <>
       <div className="mb-1 px-2">
@@ -65,6 +65,31 @@ function SidebarContent({ onLogout, onNavigate }) {
             )}
           </NavLink>
         ))}
+
+        {isAdmin && (
+          <NavLink
+            to="/admin"
+            onClick={onNavigate}
+            className={({ isActive }) =>
+              `group flex items-center gap-3 rounded-xl px-2.5 py-2 text-sm font-semibold transition ${
+                isActive ? 'bg-gold-50 text-ink-900' : 'text-ink-500 hover:bg-ivory-100 hover:text-ink-900'
+              }`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <span
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition ${
+                    isActive ? 'icon-tile' : 'bg-ivory-100 text-ink-500 group-hover:text-ink-900'
+                  }`}
+                >
+                  <Shield size={17} strokeWidth={2} />
+                </span>
+                Admin
+              </>
+            )}
+          </NavLink>
+        )}
 
         <p className="mb-1 mt-6 px-2.5 text-[0.65rem] font-bold uppercase tracking-[0.14em] text-ink-400">Categories</p>
         {categoryNav.map((c) => (
@@ -128,7 +153,7 @@ export default function Layout() {
     <div className="flex min-h-screen">
       {/* Desktop sidebar */}
       <aside className="hidden w-64 flex-col border-r border-line bg-cream px-4 py-6 md:flex">
-        <SidebarContent onLogout={handleLogout} />
+        <SidebarContent onLogout={handleLogout} isAdmin={user?.role === 'admin'} />
       </aside>
 
       {/* Mobile drawer */}
@@ -148,7 +173,7 @@ export default function Layout() {
               <button onClick={() => setMobileOpen(false)} className="absolute right-3 top-3 text-ink-400 transition hover:text-ink-900">
                 <X size={20} />
               </button>
-              <SidebarContent onLogout={handleLogout} onNavigate={() => setMobileOpen(false)} />
+              <SidebarContent onLogout={handleLogout} onNavigate={() => setMobileOpen(false)} isAdmin={user?.role === 'admin'} />
             </motion.aside>
           </>
         )}

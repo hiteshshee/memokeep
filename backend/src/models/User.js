@@ -14,6 +14,8 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true, minlength: 6, select: false },
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
     avatar: { type: String, default: '' },
+    // Timestamp of the user's most recent successful login (for admin monitoring).
+    lastLoginAt: { type: Date, default: null },
     // When true, the user has opted out of warranty/renewal reminder emails.
     reminderOptOut: { type: Boolean, default: false },
     // Email verification (OTP) — account is unusable until verified.
