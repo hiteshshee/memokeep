@@ -6,10 +6,16 @@ import { ProductsSkeleton } from '../components/Skeleton.jsx';
 import PageHeader from '../components/PageHeader.jsx';
 import { currency, formatDate, CATEGORIES, categoryTile } from '../utils/format.js';
 
+const PAGE_SIZE = 24;
+
 export default function Products() {
   const [searchParams] = useSearchParams();
   const [items, setItems] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [q, setQ] = useState('');
   const [category, setCategory] = useState(searchParams.get('category') || '');
   const [sort, setSort] = useState('-createdAt');
@@ -19,22 +25,30 @@ export default function Products() {
     setCategory(searchParams.get('category') || '');
   }, [searchParams]);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = { sort };
-      if (q) params.q = q;
-      if (category) params.category = category;
-      const { data } = await api.get('/products', { params });
-      setItems(data.items);
-    } finally {
-      setLoading(false);
-    }
-  }, [q, category, sort]);
+  // pageNum 1 replaces the list (fresh search/filter); higher pages append.
+  const load = useCallback(
+    async (pageNum) => {
+      const replace = pageNum === 1;
+      replace ? setLoading(true) : setLoadingMore(true);
+      try {
+        const params = { sort, page: pageNum, limit: PAGE_SIZE };
+        if (q) params.q = q;
+        if (category) params.category = category;
+        const { data } = await api.get('/products', { params });
+        setItems((prev) => (replace ? data.items : [...prev, ...data.items]));
+        setTotal(data.total);
+        setPages(data.pages);
+        setPage(data.page);
+      } finally {
+        replace ? setLoading(false) : setLoadingMore(false);
+      }
+    },
+    [q, category, sort]
+  );
 
-  // Debounce search/filter changes.
+  // Debounce search/filter changes; always reset to the first page.
   useEffect(() => {
-    const t = setTimeout(load, 300);
+    const t = setTimeout(() => load(1), 300);
     return () => clearTimeout(t);
   }, [load]);
 
@@ -84,6 +98,8 @@ export default function Products() {
           <p className="text-ink-400">No products found.</p>
         </div>
       ) : (
+        <>
+        <p className="text-sm text-ink-400">Showing {items.length} of {total}</p>
         <div className="reveal-stagger grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {items.map((p) => (
             <Link
@@ -118,6 +134,14 @@ export default function Products() {
             </Link>
           ))}
         </div>
+        {page < pages && (
+          <div className="flex justify-center pt-2">
+            <button onClick={() => load(page + 1)} disabled={loadingMore} className="btn-ghost">
+              {loadingMore ? 'Loading…' : 'Load more'}
+            </button>
+          </div>
+        )}
+        </>
       )}
     </div>
   );
