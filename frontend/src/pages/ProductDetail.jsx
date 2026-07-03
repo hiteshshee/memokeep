@@ -204,6 +204,7 @@ export default function ProductDetail() {
             </button>
           </div>
         </div>
+        <p className="mb-4 text-xs text-ink-400">JPG, PNG, WEBP, GIF or PDF · up to 10 MB each.</p>
 
         {documents.length === 0 ? (
           <p className="py-8 text-center text-sm text-ink-400">

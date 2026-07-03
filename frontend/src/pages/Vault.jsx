@@ -232,6 +232,7 @@ export default function Vault() {
                 <div>
                   <label className="label">Attach file (image / PDF)</label>
                   <input type="file" accept="image/*,.pdf" onChange={(e) => setFile(e.target.files?.[0] || null)} className="input py-2 text-sm" />
+                  <p className="mt-1 text-xs text-ink-400">JPG, PNG, WEBP, GIF or PDF · up to 10 MB.</p>
                   {editing?.url && !file && <p className="mt-1 text-xs text-ink-400">A file is already attached — choose a new one to replace it.</p>}
                 </div>
               </div>
